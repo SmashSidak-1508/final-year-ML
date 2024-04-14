@@ -25,6 +25,7 @@ data['cluster'] = y_predicted
 # Streamlit app
 st.set_page_config(page_title="DIET RECOMMENDATION SYSTEM", page_icon="diet.ico")
 
+
 st.title("DIET RECOMMENDATION SYSTEM")
 
 # User input
