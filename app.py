@@ -6,7 +6,7 @@ from sklearn.cluster import KMeans
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from io import BytesIO
-import plotly.express as px  # Import Plotly
+import plotly.express as px
 
 # Loading the model
 filename = "dietrec.sav"
@@ -16,12 +16,27 @@ loaded_model = pickle.load(open(filename, 'rb'))
 data = pd.read_csv("food.csv")
 diet = data.drop("Food_items", axis=1)
 
-# Applying k-means and defining the number of clusters
+# Handle missing values using SimpleImputer
+from sklearn.impute import SimpleImputer
+imputer = SimpleImputer(strategy='mean')
+diet_imputed = imputer.fit_transform(diet)
+
+# Standardize the data
+from sklearn.preprocessing import StandardScaler
+scaler = StandardScaler()
+diet_scaled = scaler.fit_transform(diet_imputed)
+
+# Apply KMeans clustering
 km = KMeans(n_clusters=4)
-y_predicted = km.fit_predict(diet)
+y_predicted = km.fit_predict(diet_scaled)
 
 # Adding a new column containing the cluster a food item is part of
 data['cluster'] = y_predicted
+
+# Streamlit app
+# st.set_page_config(page_title="DIET RECOMMENDATION SYSTEM", page_icon="diet.ico", layout="wide", initial_sidebar_state="expanded")
+
+# ... (remaining code as before)
 
 # Streamlit app
 st.set_page_config(page_title="DIET RECOMMENDATION SYSTEM", page_icon="diet.ico",layout="wide",  # Optional: set the layout to wide
