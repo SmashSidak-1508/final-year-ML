@@ -6,6 +6,7 @@ from sklearn.cluster import KMeans
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from io import BytesIO
+import plotly.express as px  # Import Plotly
 
 # Loading the model
 filename = "dietrec.sav"
@@ -23,8 +24,19 @@ y_predicted = km.fit_predict(diet)
 data['cluster'] = y_predicted
 
 # Streamlit app
-st.set_page_config(page_title="DIET RECOMMENDATION SYSTEM", page_icon="diet.ico")
-
+st.set_page_config(page_title="DIET RECOMMENDATION SYSTEM", page_icon="diet.ico",layout="wide",  # Optional: set the layout to wide
+    initial_sidebar_state="expanded",
+    )
+st.markdown(
+    """
+    <style>
+    body {
+        background-color: #FFFFFF;  /* Set background color to white */
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
 
 st.title("DIET RECOMMENDATION SYSTEM")
 
@@ -76,6 +88,33 @@ else:
 
     # Display the schedule as a table with enhanced styling
     st.table(schedule)
+    st.subheader("Visualizations")
+
+    fig_height_weight = px.scatter(data, x='Food_items', y='Calories', color='cluster', title='Food item vs Calorie')
+    st.plotly_chart(fig_height_weight)
+
+
+    fig_bmi_calories = px.scatter(data, x='Food_items', y='Sugars', color='cluster', title='Food items vs Sugars')
+    st.plotly_chart(fig_bmi_calories)
+
+
+    fig_age_calories = px.scatter(data, x='Food_items', y='Fibre', color='cluster', title='Food items vs Fibre')
+    st.plotly_chart(fig_age_calories)
+    
+    recommended_food = data[data['cluster'] == predicted_cluster].Food_items.sample(21, replace=True).values
+    avg_calories_recommended = data[data['Food_items'].isin(recommended_food)].groupby('Food_items')['Calories'].mean().reset_index()
+
+    fig_food_calories = px.bar(avg_calories_recommended, x='Food_items', y='Calories', title='Recommended Food vs Calories')
+    fig_food_calories.update_xaxes(title='Recommended Food')
+    fig_food_calories.update_yaxes(title='Calories')
+    fig_food_calories.update_layout(xaxis_tickangle=-45)  # Rotate x-axis labels for better readability
+    st.plotly_chart(fig_food_calories)
+    # Calculate average calories per cluster
+    avg_calories = data.groupby('cluster')['Calories'].mean().reset_index()
+
+    # Visualize average calorie count per cluster using Plotly bar chart
+    fig = px.bar(avg_calories, x='cluster', y='Calories', labels={'cluster': 'Cluster', 'Calories': 'Average Calories'}, title='Average Calories per Cluster')
+    st.plotly_chart(fig)
 
     def generate_pdf(schedule_data, bmi, weight_category, name, age):
         buffer = BytesIO()
